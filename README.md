@@ -1,16 +1,35 @@
-# chatapp
+# Flutter Firebase App
 
-A new Flutter project.
+A real-time Product view ,mirroring,chat app using Flutter and Firebase with email/password authentication, Clean Architecture, BLoC, and TDD principles.
 
-## Getting Started
+---
 
-This project is a starting point for a Flutter application.
+## 📐 Architecture Overview
 
-A few resources to get you started if this is your first Flutter project:
+The app follows **Clean Architecture** with layers:
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
+- **Presentation** – Flutter UI + BLoC (Business Logic Component)
+- **Domain** – Use Cases, Repositories (interfaces), Entities
+- **Data** – Firebase datasources, models, and concrete repositories
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+Technologies used:
+- Flutter (3.32.7)
+- Firebase (Firestore & Auth)
+- BLoC for state management
+- TDD for business logic
+- Firestore for real-time messaging
+
+---
+
+Setup Instructions
+
+clone the repo
+install flutter
+install android studio
+install java
+
+Flutter Setup
+--- bash
+flutter clean
+flutter pub get
+flutter run
