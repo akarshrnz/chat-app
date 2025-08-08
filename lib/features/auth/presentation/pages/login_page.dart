@@ -37,7 +37,7 @@ class _LoginScreenState extends State<LoginScreen> {
             );
           }
           if (state is Authenticated) {
-            Navigator.pushReplacementNamed(context, "/home");
+            Navigator.pushReplacementNamed(context, "/chat");
           }
         },
         builder: (context, state) {

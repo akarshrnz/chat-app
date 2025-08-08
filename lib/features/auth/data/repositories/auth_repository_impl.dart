@@ -9,8 +9,8 @@ class AuthRepository implements AuthRepositoryInterface {
   AuthRepository(this._remoteDataSource);
 
   @override
-  Future<UserEntity?> register(String email, String password) async {
-    final user = await _remoteDataSource.register(email, password);
+  Future<UserEntity?> register(String email, String password,String name, String phone) async {
+    final user = await _remoteDataSource.register(email, password,name,phone);
     if (user != null) {
       return UserEntity(uid: user.uid, email: email, userId: user.uid);
     }

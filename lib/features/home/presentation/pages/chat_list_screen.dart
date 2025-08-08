@@ -1,338 +1,223 @@
-import 'dart:async';
-import 'package:chatapp/features/auth/domain/entities/user_entity.dart';
-import 'package:chatapp/features/home/presentation/bloc/home_bloc.dart';
-import 'package:chatapp/features/home/presentation/bloc/home_event.dart';
-import 'package:chatapp/features/home/presentation/bloc/home_state.dart';
-import 'package:chatapp/features/home/presentation/pages/chat_detail_screen.dart';
+import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:get_it/get_it.dart';
+import 'chat_detail_screen.dart';
+import 'full_profile_screen.dart';
 
-class ChatListScreen extends StatefulWidget {
-  const ChatListScreen({super.key});
+class ChatListScreen extends StatelessWidget {
+  final currentUser = FirebaseAuth.instance.currentUser;
 
-  @override
-  State<ChatListScreen> createState() => _ChatListScreenState();
-}
+  ChatListScreen({super.key});
 
-class _ChatListScreenState extends State<ChatListScreen> {
-  late HomeBloc _bloc;
-  String? _currentMirroringTo;
-  StreamSubscription<QuerySnapshot>? _mirrorSubscription;
-
-  @override
-  void initState() {
-    super.initState();
-    _bloc = GetIt.I<HomeBloc>();
-    _bloc.add(LoadUsers());
-    _listenToMyMirrorStatus();
-  }
-
-  void _listenToMyMirrorStatus() {
-    final currentUserId = FirebaseAuth.instance.currentUser?.uid;
-    if (currentUserId == null) return;
-
-    _mirrorSubscription = FirebaseFirestore.instance
-        .collection('mirrors')
-        .where('mirroredBy', isEqualTo: currentUserId)
-        .snapshots()
-        .listen((snapshot) {
-      if (!mounted) return;
-      setState(() {
-        _currentMirroringTo =
-            snapshot.docs.isNotEmpty ? snapshot.docs.first.id : null;
-      });
-    });
-  }
-
-  Future<void> _setMirror(String targetUserId) async {
-    final currentUserId = FirebaseAuth.instance.currentUser?.uid;
-    if (currentUserId == null) return;
-
-    final existing = await FirebaseFirestore.instance
-        .collection('mirrors')
-        .where('mirroredBy', isEqualTo: currentUserId)
-        .get();
-
-    for (var doc in existing.docs) {
-      await doc.reference.delete();
-    }
-
-    await FirebaseFirestore.instance
-        .collection('mirrors')
-        .doc(targetUserId)
-        .set({'mirroredBy': currentUserId});
-
-    if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: const Text("Mirror started"),
-          behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(10),
-          ),
-          backgroundColor: Colors.tealAccent[400],
-        ),
-      );
-    }
-  }
-
-  Future<void> _cancelMirror() async {
-    final currentUserId = FirebaseAuth.instance.currentUser?.uid;
-    if (currentUserId == null) return;
-
-    final query = await FirebaseFirestore.instance
-        .collection('mirrors')
-        .where('mirroredBy', isEqualTo: currentUserId)
-        .get();
-
-    for (var doc in query.docs) {
-      await doc.reference.delete();
-    }
-
-    if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: const Text("Mirror cancelled"),
-          behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(10),
-          ),
-          backgroundColor: Colors.redAccent[400],
-        ),
-      );
-    }
-  }
-
-  void _showMirrorConfirmationDialog(UserEntity user) {
-    showDialog(
+  void _showProfileDetails(BuildContext context, String email, bool isOnline, String phone, String name) {
+    showModalBottomSheet(
       context: context,
-      builder: (ctx) => Dialog(
-        backgroundColor: Colors.grey[850],
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(20),
-        ),
-        child: Padding(
-          padding: const EdgeInsets.all(20),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Icon(
-                Icons.screen_share,
+      backgroundColor: Colors.grey[900],
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) => Container(
+        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 28),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            CircleAvatar(
+              radius: 50,
+              backgroundColor: Colors.tealAccent.withOpacity(0.1),
+              child: Icon(
+                Icons.person,
                 size: 50,
-                color: Colors.tealAccent,
+                color: Colors.tealAccent[400],
               ),
-              const SizedBox(height: 16),
-              Text(
-                "Mirror ${user.email}?",
-                style: const TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white,
-                ),
+            ),
+            const SizedBox(height: 18),
+            Text(
+              name,
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 22,
+                fontWeight: FontWeight.bold,
               ),
-              const SizedBox(height: 8),
-              const Text(
-                "This will allow the user to see your screen",
-                style: TextStyle(color: Colors.white70),
-                textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 4),
+            Text(
+              "+91 $phone",
+              style: TextStyle(
+                color: Colors.grey[400],
+                fontSize: 14,
               ),
-              const SizedBox(height: 24),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            ),
+            const SizedBox(height: 12),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+              decoration: BoxDecoration(
+                color: isOnline ? Colors.green.withOpacity(0.2) : Colors.grey[800],
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
                 children: [
-                  TextButton(
-                    onPressed: () => Navigator.of(ctx).pop(),
-                    style: TextButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 24, vertical: 12),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                    ),
-                    child: const Text(
-                      "Cancel",
-                      style: TextStyle(color: Colors.white70),
-                    ),
-                  ),
-                  ElevatedButton(
-                    onPressed: () {
-                      Navigator.of(ctx).pop();
-                      _setMirror(user.uid);
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.tealAccent[400],
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 24, vertical: 12),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                    ),
-                    child: const Text(
-                      "Mirror",
-                      style: TextStyle(color: Colors.black),
+                  Icon(Icons.circle, size: 10, color: isOnline ? Colors.green : Colors.grey),
+                  const SizedBox(width: 6),
+                  Text(
+                    isOnline ? "Online" : "Offline",
+                    style: TextStyle(
+                      color: isOnline ? Colors.tealAccent[400] : Colors.grey[500],
+                      fontWeight: FontWeight.w500,
                     ),
                   ),
                 ],
               ),
-            ],
-          ),
+            ),
+            const SizedBox(height: 24),
+            Divider(color: Colors.grey[700]),
+            ListTile(
+              leading: Icon(Icons.info_outline, color: Colors.tealAccent[400]),
+              title: const Text("View full profile", style: TextStyle(color: Colors.white)),
+              onTap: () {
+                Navigator.pop(context);
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => FullProfileScreen(email: email, name: name, phone: phone),
+                  ),
+                );
+              },
+            ),
+            ListTile(
+              leading: Icon(Icons.message_outlined, color: Colors.tealAccent[400]),
+              title: const Text("Send message", style: TextStyle(color: Colors.white)),
+              onTap: () => Navigator.pop(context),
+            ),
+            const SizedBox(height: 10),
+          ],
         ),
       ),
     );
   }
 
   @override
-  void dispose() {
-    _mirrorSubscription?.cancel();
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
-    return BlocProvider.value(
-      value: _bloc,
-      child: Scaffold(
+    return Scaffold(
+      backgroundColor: Colors.grey[900],
+      appBar: AppBar(
+        title: const Text("Chat Users", style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600)),
         backgroundColor: Colors.grey[900],
-        appBar: AppBar(
-          title: const Text(
-            "Chat Users",
-            style: TextStyle(fontWeight: FontWeight.bold),
-          ),
-          centerTitle: true,
-          backgroundColor: Colors.grey[900],
-          elevation: 0,
-          actions: [
-            if (_currentMirroringTo != null)
-              IconButton(
-                icon: const Icon(Icons.cancel),
-                onPressed: _cancelMirror,
-                tooltip: 'Cancel Mirror',
-              ),
-          ],
-        ),
-        body: BlocBuilder<HomeBloc, HomeState>(
-          builder: (context, state) {
-            if (state is UsersLoaded) {
-              final currentUserId = FirebaseAuth.instance.currentUser?.uid;
-              final users = state.users.where((u) => u.uid != currentUserId).toList();
-
-              if (users.isEmpty) {
-                return const Center(
-                  child: Text(
-                    "No other users available",
-                    style: TextStyle(color: Colors.white70),
-                  ),
-                );
-              }
-
-              return ListView.separated(
-                padding: const EdgeInsets.all(16),
-                itemCount: users.length,
-                separatorBuilder: (_, __) => const SizedBox(height: 12),
-                itemBuilder: (context, index) {
-                  final user = users[index];
-                  final isMirroringThisUser = _currentMirroringTo == user.uid;
-
-                  return Container(
-                    decoration: BoxDecoration(
-                      color: Colors.grey[800],
-                      borderRadius: BorderRadius.circular(12),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.2),
-                          blurRadius: 6,
-                          offset: const Offset(0, 3),
-                        ),
-                      ],
-                    ),
-                    child: ListTile(
-                      contentPadding: const EdgeInsets.symmetric(
-                        horizontal: 16, vertical: 8),
-                      leading: Container(
-                        width: 50,
-                        height: 50,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: Colors.tealAccent.withOpacity(0.2),
-                        ),
-                        child: Icon(
-                          Icons.person,
-                          size: 30,
-                          color: Colors.tealAccent[400],
-                        ),
-                      ),
-                      title: Text(
-                        user.email ?? 'Unnamed User',
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                      onTap: () => Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => ChatDetailScreen(otherUser: user,currentUserId: currentUserId??"",),
-                        ),
-                      ),
-                      trailing: Container(
-                      //  height: 35,
-                        decoration: BoxDecoration(
-                          gradient: isMirroringThisUser
-                              ? LinearGradient(
-                                  colors: [Colors.redAccent[400]!, Colors.red[700]!])
-                              : LinearGradient(
-                                  colors: [Colors.tealAccent[400]!, Colors.blueAccent[400]!]),
-                          borderRadius: BorderRadius.circular(18),
-                        ),
-                        child: ElevatedButton(
-  style: ElevatedButton.styleFrom(
-    backgroundColor: isMirroringThisUser 
-        ? Colors.redAccent[400]
-        : Colors.tealAccent[400],
-    foregroundColor: Colors.black,
-    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-    shape: RoundedRectangleBorder(
-      borderRadius: BorderRadius.circular(18),
-    ),
-    elevation: 2,
-  ),
-  onPressed: () {
-    if (isMirroringThisUser) {
-      _cancelMirror();
-    } else {
-      _showMirrorConfirmationDialog(user);
-    }
-  },
-  child: Text(
-    isMirroringThisUser ? "STOP MIRROR" : "START MIRROR",
-    style: const TextStyle(
-      fontWeight: FontWeight.bold,
-      fontSize: 12,
-    ),
-  ),
-),
-                    ),
-                  ));
-                },
-              );
-            } else if (state is HomeError) {
-              return Center(
-                child: Text(
-                  state.message,
-                  style: const TextStyle(color: Colors.white70),
-                ),
-              );
-            }
-            return const Center(
+        iconTheme: IconThemeData(color: Colors.tealAccent[400]),
+        elevation: 0,
+      ),
+      body: StreamBuilder<QuerySnapshot>(
+        stream: FirebaseFirestore.instance.collection('users').snapshots(),
+        builder: (ctx, snap) {
+          if (snap.connectionState == ConnectionState.waiting) {
+            return Center(
               child: CircularProgressIndicator(
-                color: Colors.tealAccent,
+                valueColor: AlwaysStoppedAnimation<Color>(Colors.tealAccent[400]!),
               ),
             );
-          },
-        ),
+          }
+
+          if (snap.hasError) {
+            return const Center(
+              child: Text("Error loading users", style: TextStyle(color: Colors.white)),
+            );
+          }
+
+          final users = snap.data!.docs.where((d) => d.id != currentUser!.uid).toList();
+
+          if (users.isEmpty) {
+            return const Center(
+              child: Text("No users found", style: TextStyle(color: Colors.white70)),
+            );
+          }
+
+          return ListView.builder(
+            padding: const EdgeInsets.all(12),
+            itemCount: users.length,
+            itemBuilder: (ctx, i) {
+              final user = users[i];
+              final userData = user.data() as Map<String, dynamic>? ?? {};
+              final isOnline = userData['isOnline'] ?? false;
+              final email = userData['email'] ?? '';
+              final phone = userData['phone'] ?? '';
+              final name = userData['name'] ?? '';
+
+              return Container(
+                margin: const EdgeInsets.symmetric(vertical: 6),
+                decoration: BoxDecoration(
+                  color: Colors.grey[850],
+                  borderRadius: BorderRadius.circular(12),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.2),
+                      blurRadius: 4,
+                      offset: const Offset(0, 2),
+                    )
+                  ],
+                ),
+                child: ListTile(
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  leading: GestureDetector(
+                    onTap: () => _showProfileDetails(context, email, isOnline, phone, name),
+                    child: Stack(
+                      children: [
+                        CircleAvatar(
+                          backgroundColor: Colors.tealAccent.withOpacity(0.15),
+                          child: Icon(Icons.person, color: Colors.tealAccent[400]),
+                        ),
+                        if (isOnline)
+                          Positioned(
+                            right: 0,
+                            bottom: 0,
+                            child: Container(
+                              width: 12,
+                              height: 12,
+                              decoration: BoxDecoration(
+                                color: Colors.green,
+                                shape: BoxShape.circle,
+                                border: Border.all(
+                                  color: Colors.grey[850]!,
+                                  width: 2,
+                                ),
+                              ),
+                            ),
+                          ),
+                      ],
+                    ),
+                  ),
+                  title: Text(
+                    name,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  subtitle: Text(
+                    isOnline ? "Online" : "Offline",
+                    style: TextStyle(
+                      color: isOnline ? Colors.tealAccent[400] : Colors.grey[500],
+                    ),
+                  ),
+                  trailing: const Icon(Icons.chevron_right, color: Colors.white38),
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => ChatDetailScreen(
+                          otherName: name,
+                          otherPhone: phone,
+                          currentUserId: currentUser!.uid,
+                          otherUserId: user.id,
+                          otherEmail: email,
+                        ),
+                      ),
+                    );
+                  },
+                ),
+              );
+            },
+          );
+        },
       ),
     );
   }

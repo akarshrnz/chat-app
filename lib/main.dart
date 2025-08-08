@@ -1,18 +1,24 @@
 import 'package:chatapp/features/auth/presentation/bloc/auth_bloc.dart';
 import 'package:chatapp/features/auth/presentation/pages/login_page.dart';
 import 'package:chatapp/features/auth/presentation/pages/signup_page.dart';
-import 'package:chatapp/features/home/presentation/bloc/home_bloc.dart';
-import 'package:chatapp/features/home/presentation/bloc/home_event.dart';
-import 'package:chatapp/features/home/presentation/pages/home_screen.dart';
+import 'package:chatapp/features/home/presentation/bloc/chat_bloc.dart';
+import 'package:chatapp/features/home/presentation/bloc/chat_event.dart';
+import 'package:chatapp/features/home/presentation/pages/chat_list_screen.dart';
+import 'package:chatapp/features/home/presentation/pages/splash_screen.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'injection_container.dart' as di;
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp();
+   await Supabase.initialize(
+    url: 'https://afbuolkizvcrvzzgqkcm.supabase.co',
+    anonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFmYnVvbGtpenZjcnZ6emdxa2NtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTQ2NzA4MjIsImV4cCI6MjA3MDI0NjgyMn0.325PHz7pbx_S-BSwDFF0w3ytImJgIon25kIdgZM9qsI',
+  );
   await di.init();
 
   runApp(const MyApp());
@@ -28,8 +34,8 @@ class MyApp extends StatelessWidget {
         BlocProvider<AuthBloc>(
           create: (_) => di.sl<AuthBloc>(),
         ),
-        BlocProvider<HomeBloc>(
-          create: (_) => di.sl<HomeBloc>()..add(LoadProducts()),
+        BlocProvider<ChatBloc>(
+          create: (_) => di.sl<ChatBloc>()..add(LoadUsersEvent()),
         ),
       ],
       child: MaterialApp(
@@ -72,12 +78,16 @@ class MyApp extends StatelessWidget {
               padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 32),
             ),
           ),
+
+
         ),
-        initialRoute: '/login',
+        home: SplashScreen(), 
+       // initialRoute: '/splash',
         routes: {
+          '/splash': (_) => const SplashScreen(),
           '/login': (_) => const LoginScreen(),
           '/register': (_) => const RegisterScreen(),
-          '/home': (_) => const HomeScreen(),
+          '/chat': (_) =>  ChatListScreen(),
         },
       ),
     );

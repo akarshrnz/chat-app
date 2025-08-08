@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 
 class DotLoader extends StatefulWidget {
-  const DotLoader({super.key});
+ final double? height;
+  const DotLoader({super.key, this.height});
 
   @override
   State<DotLoader> createState() => DotLoaderState();
@@ -23,7 +24,7 @@ class DotLoaderState extends State<DotLoader> with SingleTickerProviderStateMixi
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      height: 20,
+      height:widget.height?? 20,
       child: AnimatedBuilder(
         animation: _controller,
         builder: (_, __) {

@@ -7,8 +7,8 @@ class AuthUseCases {
 
   AuthUseCases(this.repository);
 
-  Future<UserEntity?> register(String email, String password) {
-    return repository.register(email, password);
+  Future<UserEntity?> register(String email, String password,String name, String phone) {
+    return repository.register(email, password,name,phone);
   }
 
   Future<UserEntity?> login(String email, String password) {

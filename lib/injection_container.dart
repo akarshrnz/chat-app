@@ -2,13 +2,12 @@ import 'package:chatapp/features/auth/data/datasource/auth_remote_data_source.da
 import 'package:chatapp/features/auth/data/repositories/auth_repository_impl.dart';
 import 'package:chatapp/features/auth/domain/repositories/auth_repository.dart';
 import 'package:chatapp/features/home/data/datasources/chat_remote_data_source.dart';
-import 'package:chatapp/features/home/data/datasources/mirroring_remote_data_source.dart';
-import 'package:chatapp/features/home/data/datasources/product_remote_data_source.dart';
-import 'package:chatapp/features/home/data/repositories/home_repository_impl.dart';
-import 'package:chatapp/features/home/domain/repositories/home_repository.dart';
-import 'package:chatapp/features/home/domain/usecases/home_usecases.dart';
-import 'package:chatapp/features/home/presentation/bloc/home_bloc.dart';
+import 'package:chatapp/features/home/data/repositories/chat_repository_impl.dart';
+import 'package:chatapp/features/home/domain/repositories/chat_repository.dart';
+import 'package:chatapp/features/home/domain/usecases/chat_usecases.dart';
+import 'package:chatapp/features/home/presentation/bloc/chat_bloc.dart';
 import 'package:firebase_database/firebase_database.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 import 'package:get_it/get_it.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -32,6 +31,7 @@ init() async {
   sl.registerLazySingleton(
     () => FirebaseDatabase.instance,
   );
+    sl.registerLazySingleton(() => FirebaseStorage.instance);
 
 // auth
   sl.registerLazySingleton(
@@ -69,55 +69,41 @@ init() async {
   // DataSources
   sl.registerLazySingleton(
     () => ChatRemoteDataSource(
-      sl(),
+      sl(),sl(),
     ),
   );
-  sl.registerLazySingleton(
-    () => ProductRemoteDataSource(
-      sl(),
-    ),
-  );
-  sl.registerLazySingleton(
-    () => MirrorRemoteDataSource(
-      sl(),
-    ),
-  );
+ 
+ 
 
   // Repository
   sl.registerLazySingleton<
-    HomeRepository
+    ChatRepository
   >(
-    () => HomeRepositoryImpl(
-      chatDataSource:
+    () => ChatRepositoryImpl(
+
           sl<
             ChatRemoteDataSource
           >(),
-      productDataSource:
-          sl<
-            ProductRemoteDataSource
-          >(),
-      mirrorDataSource:
-          sl<
-            MirrorRemoteDataSource
-          >(),
+    
+      
     ),
   );
 
   // UseCases
   sl.registerLazySingleton(
-    () => HomeUseCases(
+    () => ChatUseCases(
       sl(),
     ),
   );
 
   // Bloc
   sl.registerFactory(
-    () => HomeBloc(
-      useCases:
+    () => ChatBloc(
+   
           sl<
-            HomeUseCases
+            ChatUseCases
           >(),
-      auth: sl(),
+
     ),
   );
 }
