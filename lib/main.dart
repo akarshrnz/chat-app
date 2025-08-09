@@ -1,10 +1,11 @@
 import 'package:chatapp/features/auth/presentation/bloc/auth_bloc.dart';
 import 'package:chatapp/features/auth/presentation/pages/login_page.dart';
 import 'package:chatapp/features/auth/presentation/pages/signup_page.dart';
-import 'package:chatapp/features/home/presentation/bloc/chat_bloc.dart';
-import 'package:chatapp/features/home/presentation/bloc/chat_event.dart';
-import 'package:chatapp/features/home/presentation/pages/chat_list_screen.dart';
-import 'package:chatapp/features/home/presentation/pages/splash_screen.dart';
+import 'package:chatapp/features/chat/presentation/bloc/chat_detail_bloc.dart';
+import 'package:chatapp/features/chat/presentation/bloc/chat_detail_event.dart';
+import 'package:chatapp/features/user_list/presentation/bloc/chat_list_bloc.dart';
+import 'package:chatapp/features/user_list/presentation/pages/chat_list_screen.dart';
+import 'package:chatapp/features/auth/presentation/pages/splash_screen.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -24,9 +25,16 @@ void main() async {
   runApp(const MyApp());
 }
 
-class MyApp extends StatelessWidget {
+class MyApp extends StatefulWidget {
   const MyApp({super.key});
 
+  @override
+  State<MyApp> createState() => _MyAppState();
+}
+
+class _MyAppState extends State<MyApp> {
+
+  
   @override
   Widget build(BuildContext context) {
     return MultiBlocProvider(
@@ -34,8 +42,11 @@ class MyApp extends StatelessWidget {
         BlocProvider<AuthBloc>(
           create: (_) => di.sl<AuthBloc>(),
         ),
-        BlocProvider<ChatBloc>(
-          create: (_) => di.sl<ChatBloc>()..add(LoadUsersEvent()),
+        BlocProvider<ChatDetailBloc>(
+          create: (_) => di.sl<ChatDetailBloc>(),
+        ),
+        BlocProvider<ChatListBloc>(
+          create: (_) => di.sl<ChatListBloc>(),
         ),
       ],
       child: MaterialApp(

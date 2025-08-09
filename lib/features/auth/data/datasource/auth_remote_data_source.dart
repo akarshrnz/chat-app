@@ -9,6 +9,7 @@ class AuthRemoteDataSource {
   AuthRemoteDataSource(this._auth, this._firestore);
 
   Future<User?> register(String email, String password,String name, String phone) async {
+    print("name is inside data sourc $name, phone is $phone");
     final userCred = await _auth.createUserWithEmailAndPassword(
       email: email,
       password: password,
@@ -26,7 +27,7 @@ class AuthRemoteDataSource {
       await prefs.setBool('is_logged_in', true);
       await prefs.setString('user_id', user.uid);
     }
-    return user;
+   return user;
   }
 
   Future<User?> login(String email, String password) async {

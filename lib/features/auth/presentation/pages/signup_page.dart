@@ -256,10 +256,10 @@ class _RegisterScreenState
                                             >()
                                             .add(
                                               RegisterRequested(
-                                                emailCtrl.text.trim(),
-                                                passCtrl.text.trim(),
-                                                nameCtrl.text.trim(),
-                                                phoneCtrl.text.trim(),
+                                              email:   emailCtrl.text.trim(),
+                                              password:   passCtrl.text.trim(),
+                                               name:  nameCtrl.text.trim(),
+                                               phone:  phoneCtrl.text.trim(),
                                               ),
                                             );
                                       }

@@ -20,6 +20,8 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     on<RegisterRequested>((event, emit) async {
       emit(AuthLoading());
       try {
+            print("name is inside data bloc ${event.name}, phone is ${event.phone}");
+
         final user = await useCases.register(event.email, event.password,event.name,event.phone);
         emit(user != null ? Authenticated(user) : const AuthError("Registration failed"));
       } catch (e) {
